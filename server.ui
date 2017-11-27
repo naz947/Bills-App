@@ -1,0 +1,298 @@
+#library(RODBC)
+library(shiny)
+library(plot3D)
+library(plotly)
+# Define server logic required to draw a histogram
+shinyServer(function(input, output) {
+   observeEvent(input$Add,{
+     ItemName=input$Item
+     pdate=input$dateid
+     year=substr(pdate,1,4)
+     month=substr(pdate,6,7)
+     day=substr(pdate,9,10)
+     Price=input$Cost
+     cat=input$Cat
+     myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+     count=sqlQuery(myConn,"select count(*) from germany")
+     count=count+1
+     add_quer=paste0("insert into Germany(day,month,year,cat,item,cost,id) values('" ,day, "','" ,month, "' ,'" ,year,  "','" ,cat, "', '" ,ItemName, "', " ,Price, " ," ,count, ")")
+    # add_quer=paste0("insert into bk(r) values(" ,Price, ")")
+     sqlQuery(myConn,add_quer)
+     close(myConn)
+     })
+
+  dail=function(){
+    output$mytable1 <- DT::renderDataTable({
+  
+    nwFunc()  
+
+  })
+  }
+  
+observeEvent(input$Clear,{
+  reset("form")
+  
+})
+  
+
+observeEvent(input$Reset,{
+  reset("form1")
+  
+})
+
+observeEvent(input$Reset1,{
+  reset("form2")
+  
+})
+
+
+
+  dail2=function(){
+  output$mytable2=DT::renderDataTable({
+    
+    a=nwFunc1()
+    DT::datatable(a, options = list(orderClasses = TRUE))
+    
+    })
+  }
+  
+nwFunc1=function(){
+ myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+ val=input$Grouby
+ if(val=="day")
+  add_querq=paste0("select  day,sum(cost) as sum from Germany group by  day order by day" )
+ else if(val=="month")
+   add_querq=paste0("select month,sum(cost) as month from Germany group by month ")
+ else if(val=="year")
+   add_querq=paste0("select year,sum(cost) as sum from Germany group by year order by year")
+ else if(val=="item")
+   add_querq=paste0("select item,sum(cost) as sum from Germany group by item")
+ else if(val=="cat")
+   add_querq=paste0("select cat ,sum(cost) as sum from Germany group by cat")
+ else if(val=="item")
+   add_querq=paste0("select  item ,sum(cost) as sum from Germany group by  item" )
+ 
+  else if(val=="monthitem")
+   add_querq=paste0("select month,item,sum(cost) as sum from Germany group by month,item order by month")
+ else if(val=="monthcat")
+   add_querq=paste0("select month,cat,sum(cost) as sum from Germany group by month,cat order by month")
+ else if(val=="month_cat_item")
+   add_querq=paste0("select month,item,cat,sum(cost) as sum from Germany group by month,item,cat order by month")
+ else if(val=="year_cat_item")
+   add_querq=paste0("select year,item,cat,sum(cost) as sum from Germany group by year,cat,item order by year")
+ else if(val=="yearitem")
+   add_querq=paste0("select year,item,sum(cost) as sum from Germany group by year,item order by year")
+ else   
+   add_querq=paste0("select * from Germany order by day")
+ 
+ a=sqlQuery(myConn,add_querq)
+  
+  
+  return(a)
+}
+  
+  
+  
+  observeEvent(input$Refresh,{
+    dail()
+  })
+
+observeEvent(input$Modify,{
+  dail2() 
+})
+  
+   output$download=downloadHandler(
+     filename = function() {
+  
+                   paste('data' , '.csv', sep='')
+     },
+  content = function(con) {
+    data1=nwFunc1()
+           write.csv(data1, con,row.names =FALSE , na="")
+       }
+     
+   )
+   
+  output$PiePlot=renderPlot({
+    val=input$Pie
+    if(val=="CatYear"){
+      
+      anotherfunc()
+    }
+    else{
+      newfunc()
+    }
+    
+    
+  })
+observeEvent(input$Delete,{
+  
+  x=input$Row
+  myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+  quer=paste0("delete from germany where id=" ,x, " ")
+  sqlQuery(myConn,quer)
+})
+  
+  
+  output$Analysys=renderPlotly({
+    val=input$Pie1
+    if(val=="CatYearA"){
+      
+      anotherfunc1()
+    }
+    else if (val=="CatMonA"){
+      newfunc2()
+    }
+    else{
+      newfunc3()
+    }
+    
+  })
+  library(ggplot2)
+  newfunc3=function(){
+    y=input$YEAR1
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    qer=paste0("select month,sum(cost) as sum from Germany  where year=" ,y, "  group by month")
+    a=sqlQuery(myConn,qer)
+    #p <- ggplot(data = a, aes(x = MONTH, y = SUM))+
+     # geom_point(aes(text = paste("Sum:", SUM)), size = 4)
+       
+    #ggplotly(p)
+    
+    plot_ly(a,x=~MONTH,y=~SUM, text=paste("MonthlyExpense:",a$ SUM,"Euros"),
+            mode="lines")
+  }
+
+  
+  
+  newfunc2=function(){
+    m=input$MONTH1
+    y=input$YEAR1
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    qer=paste0("select year,month,cat,sum(cost) as sum from Germany  where month=" ,m, " and year=" ,y, "  group by year,month,cat")
+    a=sqlQuery(myConn,qer)
+    r=nrow(a)
+    if(r==0)
+      plot_ly(a, labels = ~CAT, values = ~SUM, type = 'pie')
+    else
+     plot_ly(a, labels = ~CAT, values = ~SUM, type = 'pie')
+   
+      }
+     
+  newfunc=function(){
+    m=input$MONTH
+    y=input$YEAR
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    qer=paste0("select year,month,cat,sum(cost) as sum from Germany  where month=" ,m, " and year=" ,y, "  group by year,month,cat ")
+    a=sqlQuery(myConn,qer)
+    r=nrow(a)
+    if(r==0)
+    pie(1,1)
+    else
+      pie(a$SUM,a$CAT,main = "Your Expenses")
+        
+    
+  }
+  
+  anotherfunc=function(){
+    y=input$YEAR 
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    qer=paste0("select year,cat,sum(cost) as sum from Germany  where year=" ,y, "  group by year,cat") 
+    a=sqlQuery(myConn,qer)
+    r=nrow(a)
+    if(r==0)
+    pie(1,1)
+    else
+    pie(a$SUM,a$CAT)
+     
+   }
+   
+  anotherfunc1=function(){
+    y=input$YEAR1 
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    qer=paste0("select year,cat,sum(cost) as sum from Germany  where year=" ,y, "  group by year,cat") 
+    a=sqlQuery(myConn,qer)
+    r=nrow(a)
+    if(r==0)
+      plot_ly(a, labels = ~CAT, values = ~SUM, type = 'pie')
+    else
+      plot_ly(a, labels = ~CAT, values = ~SUM, type = 'pie')
+    
+  }
+  
+   
+  nwFunc=function(){
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    a=sqlQuery(myConn,"select * from Germany order by day")
+    DT::datatable(a, options = list(orderClasses = TRUE))
+    
+  } 
+  
+  datafunc=function(){
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    a=sqlQuery(myConn,"select * from Germany")
+    return(a)
+  }
+  
+  output$ui=renderUI({
+    switch(input$Select,
+           "ChangDate"=dateInput("d", "Date:", value = Sys.Date(),format = "dd-mm-yyyy"),
+           "ChangeItem"=textInput("d","Item:"),
+           "ChangCost"=textInput("d","Cost:"),
+           "Changecat"=selectInput("cate", "Cat:",
+                                  c("Food"="Food","Clothing"="Clothing","Electronics"="Electronics","Kitchen"="Kitchen","HouseAssc"="HouseAssc","Travel"="Travel",
+                                    "Medicine"="Medicine","Stationery"="Stationery","Uni"="Uni","Other"="Other"
+                                    
+                                  ))
+          
+    )
+    
+    
+  })
+
+  observeEvent(input$Update,{
+    value=input$Select
+    if(value=="ChangDate")
+    {
+      row1=input$Rownum
+      new1=input$d
+      y=substr(new1,1,4)
+      m=substr(new1,6,7)
+      d=substr(new1,9,10)
+      quer=paste0("update germany set day = ",d," , month = ",m, ", year=",y,"  where id= ",row1," ")
+      print(quer)
+      myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+      sqlQuery(myConn,quer)
+    }
+    else  if(value=="ChangeItem")
+    {row1=input$Rownum
+    vl=input$d
+    quer=paste0("update germany set item= '",vl,"' where id = ",row1," ")
+    print(quer)
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    sqlQuery(myConn,quer)
+    }
+    else if(value=="ChangCost")
+    {row1=input$Rownum
+    vl=input$d
+    quer=paste0("update germany set cost= ",vl," where id = ",row1," ")
+    print(quer)
+    myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+    sqlQuery(myConn,quer)
+    }
+    else if(value=="Changecat")
+    {
+      row1=input$Rownum
+      vl=input$cate
+    quer=paste0("update germany set cat= '",vl,"' where id= ",row1," ")
+      print(quer)
+      myConn=odbcConnect("mydsn1",uid = "system",pwd="sunny123456")
+      sqlQuery(myConn,quer)
+    }
+    
+    
+    
+    
+  })
+  
+  })
