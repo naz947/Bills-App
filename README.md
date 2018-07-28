@@ -36,3 +36,10 @@ The main page looks like this
 We can see the whole data base by opening the tab View and clicking on Refresh
 
 ![selection_063](https://user-images.githubusercontent.com/24760891/43360638-7d622a88-92b9-11e8-97a3-2f53ae1cd39e.png)
+
+Some basic statistics and Graphs
+
+![selection_064](https://user-images.githubusercontent.com/24760891/43360647-bf6cc604-92b9-11e8-8557-d9e5c30b8277.png)
+
+
+
