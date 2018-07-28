@@ -29,3 +29,6 @@ item--------Stirng
 cost--------Number
 
 id----------Number
+
+The main page looks like this
+![selection_062](https://user-images.githubusercontent.com/24760891/43360622-2a04c9cc-92b9-11e8-80f8-238c2cc9b49c.png)
