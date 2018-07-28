@@ -41,5 +41,6 @@ Some basic statistics and Graphs
 
 ![selection_064](https://user-images.githubusercontent.com/24760891/43360647-bf6cc604-92b9-11e8-8557-d9e5c30b8277.png)
 
+![selection_065](https://user-images.githubusercontent.com/24760891/43360651-ebd68b12-92b9-11e8-9be7-1f33dd56872b.png)
 
 
